@@ -60,7 +60,7 @@ def make_time_lapse():
     video.release()
     
 def take_picture(name):
-    response = requests.get("http://192.168.0.28:8084/?action=snapshot")
+    response = requests.get("http://192.168.0.20:8084/?action=snapshot")
     img = response.content
     file_name = "./time_lapse_pics/" + str(name) + ".jpg"
     if response.status_code == 200:
