@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
+import requests
 
 def sendEmail():
     email_user = 'trentdouglasemail@gmail.com'
@@ -40,9 +41,6 @@ def sendEmail():
     server.sendmail(email_user,email_send,text)
     server.quit()
 
-
-
-
 def make_time_lapse():
     image_folder = './time_lapse_pics'
     video_name = 'time_lapse.avi'
@@ -61,23 +59,15 @@ def make_time_lapse():
     cv2.destroyAllWindows()
     video.release()
     
-    
-
-def take_picture(name, x_res, y_res, quality, skip):
-    size = 0
-    while(size < 500000):
-        cmd_str = "fswebcam -r " + str(x_res) + "x" + str(y_res) + " --jpeg " + str(quality) + " --skip " + str(skip) + " ~/Desktop/vm_files/time_lapse_pics/" + str(name) + ".jpg"
-        os.system(cmd_str)
-        time.sleep(2)
-        file_name = "./time_lapse_pics/" + str(name) + ".jpg"
-        size = os.path.getsize(file_name)
-    print("\ncaptured " + str(name) + " size: " + str(size) + "\n")
-    os.system(f'cp {file_name} /home/trent/Desktop/webapp/static/IMG/Current_Picture.png')
-    print("Copied to web server")
-    
-
-
-
+def take_picture(name):
+    response = requests.get("http://192.168.0.28:8084/?action=snapshot")
+    img = response.content
+    file_name = "./time_lapse_pics/" + str(name) + ".jpg"
+    if response.status_code == 200:
+        with open(file_name, 'wb') as file:
+            file.write(response.content)
+    else:
+        print(f"ERROR: {response.status_code}: {response.text}")
 
 ## MAIN ##
 while True:
@@ -89,7 +79,7 @@ while True:
                 #take picture once every minute
                 if(time.localtime().tm_sec == 0):
                     os.system("clear")
-                    take_picture("pic_" + str("%06d"%(count,)), 1920, 1080, 100, 0)       
+                    take_picture("pic_" + str("%06d"%(count,)))       
                     count = count + 1
                 time.sleep(1)
         except:
@@ -104,7 +94,7 @@ while True:
         sendEmail()
         print("Email Sent")
         print("Moving to Web Server...")
-        os.system(f'cp ./time_lapse_pics/time_lapse.mp4 /home/trent/Desktop/webapp/static/VIDEO/{file_name_with_time}')
+        # os.system(f'cp ./time_lapse_pics/time_lapse.mp4 /home/trent/Desktop/webapp/static/VIDEO/{file_name_with_time}')
         print("Deleting artifacts")
         os.system('rm time_lapse_pics/*')
         print("Done")
