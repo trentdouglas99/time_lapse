@@ -7,6 +7,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 import requests
+from PIL import Image, ImageDraw, ImageFont
+from datetime import datetime
 
 def sendEmail():
     email_user = 'trentdouglasemail@gmail.com'
@@ -50,10 +52,9 @@ def make_time_lapse():
     frame = cv2.imread(os.path.join(image_folder, images[0]))
     height, width, layers = frame.shape
 
-    video = cv2.VideoWriter("./time_lapse_pics/" + video_name, 0, 10, (width,height))
+    video = cv2.VideoWriter("./time_lapse_pics/" + video_name, 0, 40, (width,height))
 
     for image in images:
-
         video.write(cv2.imread(os.path.join(image_folder, image)))
 
     cv2.destroyAllWindows()
@@ -66,6 +67,14 @@ def take_picture(name):
     if response.status_code == 200:
         with open(file_name, 'wb') as file:
             file.write(response.content)
+        img = Image.open(file_name)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.load_default()
+        text_position = (10, 10)
+        text_color = (255, 255, 255)
+        draw.text(text_position, timestamp, font=font, fill=text_color)
+        img.save(file_name)
     else:
         print(f"ERROR: {response.status_code}: {response.text}")
 
@@ -75,9 +84,10 @@ while True:
     if(time.localtime().tm_hour >= 6 and time.localtime().tm_hour < 21):
         try:
             while (time.localtime().tm_hour >= 6 and time.localtime().tm_hour < 21):
-                print("waiting for 0. Current second is " + str(time.localtime().tm_sec))
-                #take picture once every minute
-                if(time.localtime().tm_sec == 0):
+                print("waiting for %15==0 seconds. Current second is " + str(time.localtime().tm_sec))
+                #take picture 4 times per minute
+                seconds = time.localtime().tm_sec
+                if(seconds == 0 or seconds == 15 or seconds == 30 or seconds == 45):
                     os.system("clear")
                     take_picture("pic_" + str("%06d"%(count,)))       
                     count = count + 1
@@ -94,7 +104,7 @@ while True:
         sendEmail()
         print("Email Sent")
         print("Moving to Web Server...")
-        # os.system(f'cp ./time_lapse_pics/time_lapse.mp4 /home/trent/Desktop/webapp/static/VIDEO/{file_name_with_time}')
+        os.system(f'cp ./time_lapse_pics/time_lapse.mp4 /home/trent/dashboard/public/assets/time_lapses/{file_name_with_time}')
         print("Deleting artifacts")
         os.system('rm time_lapse_pics/*')
         print("Done")
