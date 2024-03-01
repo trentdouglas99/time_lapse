@@ -46,17 +46,13 @@ def sendEmail():
 def make_time_lapse():
     image_folder = './time_lapse_pics'
     video_name = 'time_lapse.avi'
-
     images = [img for img in os.listdir(image_folder) if img.endswith(".jpg")]
     images.sort()
     frame = cv2.imread(os.path.join(image_folder, images[0]))
     height, width, layers = frame.shape
-
     video = cv2.VideoWriter("./time_lapse_pics/" + video_name, 0, 40, (width,height))
-
     for image in images:
         video.write(cv2.imread(os.path.join(image_folder, image)))
-
     cv2.destroyAllWindows()
     video.release()
     
@@ -84,11 +80,11 @@ while True:
     if(time.localtime().tm_hour >= 6 and time.localtime().tm_hour < 21):
         try:
             while (time.localtime().tm_hour >= 6 and time.localtime().tm_hour < 21):
-                print("waiting for %15==0 seconds. Current second is " + str(time.localtime().tm_sec))
+                #print("waiting for %15==0 seconds. Current second is " + str(time.localtime().tm_sec))
                 #take picture 4 times per minute
                 seconds = time.localtime().tm_sec
                 if(seconds == 0 or seconds == 15 or seconds == 30 or seconds == 45):
-                    os.system("clear")
+                    #os.system("clear")
                     take_picture("pic_" + str("%06d"%(count,)))       
                     count = count + 1
                 time.sleep(1)
@@ -98,8 +94,7 @@ while True:
         file_name_with_time = str(time.localtime().tm_mon).zfill(2) + "-" + str(time.localtime().tm_mday).zfill(2) + "-" + str(time.localtime().tm_year) + ".mp4"
         make_time_lapse()
         print("\nTime Lapse Created, Converting to MP4\n")
-        os.system('ffmpeg -i ./time_lapse_pics/time_lapse.avi -c:v h264 -b:v 200k -y ./time_lapse_pics/time_lapse.mp4')
-        # os.system('ffmpeg -i ./time_lapse_pics/time_lapse.avi -c:v copy -c:a copy ./time_lapse_pics/time_lapse.mp4')
+        os.system('ffmpeg -i ./time_lapse_pics/time_lapse.avi -c:v h264 -b:v 1000k -y ./time_lapse_pics/time_lapse.mp4')
         print("\nVideo Successfully converted to MP4! Sending email...\n")
         sendEmail()
         print("Email Sent")
@@ -109,8 +104,5 @@ while True:
         os.system('rm time_lapse_pics/*')
         print("Done")
     else:
-        print("Waiting until 6:00 AM. Current time is ")
-        os.system('date')
-        print("Waiting one minute...")
         time.sleep(60)
     
